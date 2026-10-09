@@ -57,7 +57,13 @@ export class AppsScriptApi implements Api {
         redirect: 'follow',
       });
     } catch {
-      throw new ApiError('network', 'No se ha podido conectar con Google Sheets. Revisa la conexión y la URL del Apps Script.');
+      // Casi siempre es la implementación del Apps Script: si exige iniciar sesión, Google responde con
+      // una página de login sin cabeceras CORS y el navegador bloquea la respuesta.
+      throw new ApiError(
+        'network',
+        'No se ha podido conectar con el Apps Script. Abre su URL en una ventana de incógnito: debe mostrar {"ok":true,…}. ' +
+          'Si pide iniciar sesión, en Apps Script ve a Implementar → Gestionar implementaciones → editar y pon «Quién tiene acceso: Cualquier usuario».',
+      );
     }
     let data: { ok: boolean; code?: string; message?: string } & Record<string, unknown>;
     try {
