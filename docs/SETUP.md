@@ -18,7 +18,10 @@ Mientras no conectéis el Sheet, la web funciona en **modo demo**: entráis con 
 ## 2. Instalar el Apps Script
 
 1. Abrid el Sheet y entrad en **Extensiones → Apps Script**.
-2. Borrad lo que haya en `Código.gs`, pegad el contenido de [`apps-script/Code.gs`](../apps-script/Code.gs) y guardad (💾).
+2. Borrad lo que haya en `Código.gs`, pegad el contenido de `apps-script/Code.gs` y guardad (💾).
+   - **Copiadlo desde la versión raw:** https://raw.githubusercontent.com/dolgo88/businesshub/main/apps-script/Code.gs (Ctrl+A, Ctrl+C). También sirve el botón «Copy raw file» de la página del archivo en GitHub.
+   - No lo seleccionéis en la vista normal de GitHub: en archivos largos solo se copian las líneas visibles y Apps Script da `SyntaxError: Unexpected end of input`.
+   - El archivo pegado tiene unas 310 líneas y termina con la función `selfTest` (`return result;` y `}`).
 3. Opcional: en **Configuración del proyecto** (⚙️) poned la zona horaria «Europe/Madrid».
 4. Elegid la función **`setup`** en el desplegable de arriba y pulsad **Ejecutar**.
    - Google pedirá permisos. Como el script es vuestro, saldrá el aviso «Google no ha verificado esta aplicación».
