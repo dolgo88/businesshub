@@ -63,16 +63,17 @@ export function AjustesPage() {
           {api.mode === 'sheets' && <p className="muted" style={{ wordBreak: 'break-all' }}>Apps Script: {getConfiguredUrl()}</p>}
           <div className="row">
             <button className="btn" onClick={() => void reload()}>Recargar datos</button>
-            {api.mode === 'demo' && !readOnly && (
+            {!readOnly && (
               <button
                 className="btn danger"
                 onClick={() => {
-                  if (!window.confirm('Se borrarán los datos de la demo de este navegador y se cargarán los de ejemplo. ¿Continuar?')) return;
-                  LocalDemoApi.reset();
+                  const donde = api.mode === 'demo' ? 'de la demo en este navegador' : 'del Google Sheet (todas las pestañas menos «Usuarios»)';
+                  if (!window.confirm(`Se REEMPLAZARÁN todos los datos ${donde} por la plantilla de ejemplo de Barcelona. ¿Continuar?`)) return;
+                  if (api.mode === 'demo') LocalDemoApi.reset();
                   void initialize('ejemplo');
                 }}
               >
-                Restablecer datos de ejemplo
+                Cargar plantilla de ejemplo
               </button>
             )}
           </div>

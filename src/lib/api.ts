@@ -46,7 +46,20 @@ export class AppsScriptApi implements Api {
   mode = 'sheets' as const;
   constructor(private url: string) {}
 
+  /** Llama al Apps Script reintentando los fallos puntuales de red (Google a veces responde con un error transitorio). */
   private async call<T>(payload: Record<string, unknown>): Promise<T> {
+    const delays = [1000, 2500, 5000];
+    for (let attempt = 0; ; attempt++) {
+      try {
+        return await this.callOnce<T>(payload);
+      } catch (e) {
+        if (!(e instanceof ApiError && e.code === 'network') || attempt >= delays.length) throw e;
+        await new Promise((r) => setTimeout(r, delays[attempt]));
+      }
+    }
+  }
+
+  private async callOnce<T>(payload: Record<string, unknown>): Promise<T> {
     let res: Response;
     try {
       // text/plain evita la petición previa (preflight) de CORS, que Apps Script no admite.

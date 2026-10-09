@@ -59,3 +59,59 @@ test('modo Google Sheets: login con la pestaña Usuarios, plantilla, guardado y 
   await expect(page.getByRole('button', { name: 'Entrar' })).toBeVisible();
   expect(calls).toContain('saveTable');
 });
+
+test('modo Google Sheets: un fallo puntual de red al crear las pestañas se reintenta solo', async ({ page }) => {
+  const gas = loadScript();
+  gas.setup();
+  let saves = 0;
+  let aborted = false;
+  await page.route('https://script.google.com/**', async (route) => {
+    const body = route.request().postData() ?? '{}';
+    if (JSON.parse(body).action === 'saveTable' && ++saves === 4 && !aborted) {
+      aborted = true; // la 4.ª pestaña falla una vez, como le pasó al usuario
+      await route.abort('failed');
+      return;
+    }
+    await route.fulfill({ status: 200, contentType: 'application/json', headers: { 'access-control-allow-origin': '*' }, body: gas.doPost({ postData: { contents: body } }).s });
+  });
+  await page.goto('/');
+  await page.evaluate((url) => {
+    localStorage.clear();
+    localStorage.setItem('businesshub.apiUrl', url);
+  }, API);
+  await page.goto('/');
+  await page.getByLabel('Usuario').fill('socio1');
+  await page.getByLabel('Contraseña').fill('cambia-esta-clave');
+  await page.getByRole('button', { name: 'Entrar' }).click();
+  await page.getByRole('button', { name: 'Empezar vacío' }).click();
+  await expect(page.locator('.hub-center')).toBeVisible({ timeout: 15000 });
+  expect(aborted).toBe(true);
+  expect(gas.ss.getSheetByName('GastosFijos')).not.toBeNull();
+  expect(gas.ss.getSheetByName('Documentos')).not.toBeNull();
+});
+
+test('modo Google Sheets: una inicialización a medias se completa con pestañas vacías', async ({ page }) => {
+  const gas = loadScript();
+  gas.setup();
+  const token = JSON.parse(gas.doPost({ postData: { contents: JSON.stringify({ action: 'login', usuario: 'socio1', password: 'cambia-esta-clave' }) } }).s).token;
+  for (const table of ['Config', 'Tareas', 'Inversion']) {
+    gas.call({ action: 'saveTable', token, table, columns: [{ name: 'id', type: 'string' }], rows: [], baseVersion: null });
+  }
+  await page.route('https://script.google.com/**', async (route) => {
+    const body = route.request().postData() ?? '{}';
+    await route.fulfill({ status: 200, contentType: 'application/json', headers: { 'access-control-allow-origin': '*' }, body: gas.doPost({ postData: { contents: body } }).s });
+  });
+  await page.goto('/');
+  await page.evaluate((url) => {
+    localStorage.clear();
+    localStorage.setItem('businesshub.apiUrl', url);
+  }, API);
+  await page.goto('/');
+  await page.getByLabel('Usuario').fill('socio1');
+  await page.getByLabel('Contraseña').fill('cambia-esta-clave');
+  await page.getByRole('button', { name: 'Entrar' }).click();
+  await expect(page.locator('.hub-center')).toBeVisible();
+  const gastos = gas.ss.getSheetByName('GastosFijos')!;
+  expect(gastos.values.length).toBe(1); // solo cabeceras: no se mezclan datos de ejemplo
+  await expect(page.locator('.hub-node', { hasText: 'Cronograma' })).toContainText('0/0');
+});

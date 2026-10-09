@@ -134,16 +134,15 @@ export function DataProvider({ children }: { children: ReactNode }) {
           versions.current[t] = remote[t].version;
         }
       }
-      // Tablas nuevas que aún no existen en el Sheet (p. ej. tras una actualización): se crean con datos de ejemplo.
+      // Pestañas que faltan (una inicialización que se cortó, o tablas nuevas tras una actualización):
+      // se crean vacías, nunca con datos de ejemplo, para no mezclar datos.
       const missing = TABLE_NAMES.filter((t) => !remote[t]);
-      if (missing.length) {
-        const seed = seedDatabase() as unknown as Record<TableName, unknown[]>;
-        for (const t of missing) {
-          next[t] = seed[t];
-          versions.current[t] = null;
-          if (s.user.rol !== 'lector') {
-            await saveTableNow(t, (seed[t] as Database[typeof t]).map((r) => serializeRow(t, r as never)));
-          }
+      for (const t of missing) {
+        const rows = t === 'Config' ? settingsToRows(DEFAULT_SETTINGS) : [];
+        next[t] = rows;
+        versions.current[t] = null;
+        if (s.user.rol !== 'lector') {
+          await saveTableNow(t, (rows as Database[typeof t]).map((r) => serializeRow(t, r as never)));
         }
       }
       setDb(next as unknown as Database);
