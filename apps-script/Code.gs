@@ -267,6 +267,11 @@ function setup() {
     sh.setFrozenRows(1);
     sh.getRange(5, 1).setValue('rol: editor (puede modificar) o lector (solo ver). activo: TRUE/FALSE.');
   }
+  // Quita la pestaña vacía que trae un Sheet nuevo ("Hoja 1", "Sheet1"...).
+  ss.getSheets().forEach(function (s) {
+    var empty = s.getLastRow() === 0 && s.getLastColumn() === 0;
+    if (empty && /^(Hoja|Sheet|Full|Feuille)\s*\d+$/i.test(s.getName()) && ss.getSheets().length > 1) ss.deleteSheet(s);
+  });
   secret_();
   Logger.log('Listo. Cambia las contraseñas en la pestaña "Usuarios" y despliega como aplicación web.');
 }

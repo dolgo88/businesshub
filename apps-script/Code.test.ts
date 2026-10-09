@@ -60,6 +60,14 @@ describe('Apps Script (Code.gs) contra un Sheet simulado', () => {
     expect(call({ action: 'getAll', token }).code).toBe('unauthorized');
   });
 
+  it('setup quita la pestaña vacía por defecto y no toca las que tienen datos', () => {
+    const { setup, ss } = loadScript();
+    ss.insertSheet('Hoja 1');
+    ss.insertSheet('Hoja 2').values = [['nota']];
+    setup();
+    expect(ss.getSheets().map((s) => s.name)).toEqual(['Hoja 2', 'Usuarios']);
+  });
+
   it('bloquea tras muchos intentos fallidos', () => {
     const { setup, call } = loadScript();
     setup();

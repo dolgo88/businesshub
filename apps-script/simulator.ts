@@ -49,6 +49,8 @@ export class FakeSheet {
   setFrozenRows() {}
   getMaxColumns() { return Math.max(1, ...this.values.map((r) => r.length)); }
   getMaxRows() { return this.values.length; }
+  getLastRow() { return this.values.filter((r) => r.some((v) => v !== '')).length; }
+  getLastColumn() { return Math.max(0, ...this.values.map((r) => r.length)); }
 }
 
 export function loadScript() {
